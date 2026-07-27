@@ -18,6 +18,9 @@ run_tests(;
         @testset "Test Shooting methods convergence" begin
             include(joinpath(@__DIR__, "shooting_tests.jl"))
         end
+        @testset "Developer interfaces" begin
+            include(joinpath(@__DIR__, "developer_interfaces.jl"))
+        end
     end,
     qa = () -> begin
         activate_group_env(joinpath(@__DIR__, "qa"))

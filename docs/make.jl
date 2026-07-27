@@ -4,7 +4,7 @@ using SimpleBoundaryValueDiffEq
 DocMeta.setdocmeta!(
     SimpleBoundaryValueDiffEq,
     :DocTestSetup,
-    :(using SimpleBoundaryValueDiffEq);
+    :(using SimpleBoundaryValueDiffEq; using SciMLBase: solve);
     recursive = true,
 )
 
@@ -18,6 +18,7 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
+        "Developer API" => "developer_api.md",
     ],
     checkdocs = :exports,
     warnonly = false,

@@ -27,7 +27,7 @@ using SimpleBoundaryValueDiffEq
 sol = solve(prob, SimpleShooting(); abstol = 1.0e-8, reltol = 1.0e-8)
 ```
 """
-struct SimpleShooting{N, O} <: AbstractSimpleShooting
+struct SimpleShooting{N, O} <: AbstractBVPAlgorithm
     nlsolve::N
     ode_alg::O
 end
@@ -35,8 +35,32 @@ function SimpleShooting(; nlsolve = SimpleNewtonRaphson(), ode_alg = Tsit5())
     return SimpleShooting(nlsolve, ode_alg)
 end
 
-export SimpleShooting
+"""
+    solve(prob::BVProblem, alg::SimpleShooting; abstol = 1.0e-6, reltol = 1.0e-6,
+        odesolve_kwargs = (;), nlsolve_kwargs = (;))
 
+Solve a boundary value problem by integrating an initial value problem and matching its
+boundary residual with a nonlinear solve.
+
+# Arguments
+
+  - `prob::BVProblem`: in-place or out-of-place boundary value problem to solve.
+  - `alg::SimpleShooting`: shooting algorithm that selects the ODE and nonlinear solvers.
+
+# Keywords
+
+  - `abstol::Real = 1.0e-6`: absolute tolerance supplied to both internal solves.
+  - `reltol::Real = 1.0e-6`: relative tolerance supplied to both internal solves.
+  - `odesolve_kwargs::NamedTuple = (;)`: additional keyword arguments forwarded to the ODE
+    solver selected by `alg.ode_alg`.
+  - `nlsolve_kwargs::NamedTuple = (;)`: additional keyword arguments forwarded to the
+    nonlinear solver selected by `alg.nlsolve`.
+
+# Returns
+
+  - `ODESolution`: final ODE trajectory, boundary residual, and return code from the internal
+    solves.
+"""
 function DiffEqBase.solve(
         prob::BVProblem, alg::SimpleShooting; abstol = 1.0e-6,
         reltol = 1.0e-6, odesolve_kwargs = (;), nlsolve_kwargs = (;)
@@ -47,7 +71,7 @@ function DiffEqBase.solve(
     iip = isinplace(prob)
 
     internal_prob = ODEProblem{iip}(prob.f, u0, prob.tspan, prob.p)
-    ode_cache = SciMLBase.__init(
+    ode_cache = init(
         internal_prob, alg.ode_alg; abstol = abstol, reltol = reltol, odesolve_kwargs...
     )
 
@@ -81,7 +105,7 @@ function DiffEqBase.solve(
     nlsol = solve(nlprob, alg.nlsolve, abstol = abstol, reltol = reltol, nlsolve_kwargs...)
 
     internal_prob_final = ODEProblem{iip}(prob.f, nlsol.u, prob.tspan, prob.p)
-    odesol = SciMLBase.__solve(
+    odesol = solve(
         internal_prob_final, alg.ode_alg, abstol = abstol,
         reltol = reltol, odesolve_kwargs...
     )

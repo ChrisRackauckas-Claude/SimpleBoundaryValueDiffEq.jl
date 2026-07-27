@@ -85,9 +85,68 @@ struct SimpleMIRK6{N} <: AbstractSimpleMIRK
 end
 SimpleMIRK6(; nlsolve = SimpleNewtonRaphson()) = SimpleMIRK6(nlsolve)
 
-export SimpleMIRK4
-export SimpleMIRK5
-export SimpleMIRK6
+"""
+    alg_order(alg::AbstractSimpleMIRK) -> Integer
+
+Return the formal convergence order of a developer-defined MIRK algorithm.
+
+# Arguments
+
+  - `alg::AbstractSimpleMIRK`: algorithm whose tableau order is requested.
+
+# Returns
+
+  - `Integer`: the method's formal order.
+
+# Interface
+
+Every concrete subtype of [`AbstractSimpleMIRK`](@ref) must implement this function. The
+result is metadata for users and tests; the generic solver does not infer it from the tableau.
+"""
+function alg_order end
+
+"""
+    alg_stage(alg::AbstractSimpleMIRK) -> Integer
+
+Return the number of stage derivatives used by a developer-defined MIRK algorithm.
+
+# Arguments
+
+  - `alg::AbstractSimpleMIRK`: algorithm whose stage count is requested.
+
+# Returns
+
+  - `Integer`: positive stage count used to allocate and evaluate the collocation stages.
+
+# Interface
+
+Every concrete subtype of [`AbstractSimpleMIRK`](@ref) must implement this function. Its value
+must agree with the leading coefficient entries returned by [`constructSimpleMIRK`](@ref).
+"""
+function alg_stage end
+
+"""
+    constructSimpleMIRK(alg::AbstractSimpleMIRK) -> (c, v, b, x)
+
+Return the collocation tableau used by a developer-defined MIRK algorithm.
+
+# Arguments
+
+  - `alg::AbstractSimpleMIRK`: algorithm whose tableau is requested.
+
+# Returns
+
+  - `(c, v, b, x)`: stage abscissas, interpolation weights, final weights, and strictly
+    lower-triangular stage coupling coefficients.
+
+# Interface
+
+Every concrete subtype of [`AbstractSimpleMIRK`](@ref) must implement this function.
+`c`, `v`, and `b` must have at least `alg_stage(alg)` entries, and `x` must provide the
+corresponding leading square block. Coefficients must support the state and time arithmetic
+performed by the generic MIRK solver.
+"""
+function constructSimpleMIRK end
 
 alg_order(alg::SimpleMIRK4) = 4
 alg_stage(alg::SimpleMIRK4) = 3
@@ -98,6 +157,32 @@ alg_stage(alg::SimpleMIRK5) = 4
 alg_order(alg::SimpleMIRK6) = 6
 alg_stage(alg::SimpleMIRK6) = 5
 
+"""
+    solve(prob::BVProblem, alg::AbstractSimpleMIRK; dt, kwargs...)
+
+Solve a boundary value problem with a mono-implicit Runge-Kutta collocation method.
+
+# Arguments
+
+  - `prob::BVProblem`: in-place or out-of-place boundary value problem to solve.
+  - `alg::AbstractSimpleMIRK`: MIRK algorithm satisfying the documented developer interface.
+
+# Keywords
+
+  - `dt::Real`: positive collocation mesh spacing. This keyword is required in practice;
+    the default sentinel raises an `ArgumentError`.
+  - `kwargs...`: accepted for compatibility with the common solve interface and currently not
+    consumed by this solver.
+
+# Returns
+
+  - `ODESolution`: solution sampled on the collocation mesh with the nonlinear solver's
+    return code.
+
+# Throws
+
+  - `ArgumentError`: if `dt` is not positive.
+"""
 function DiffEqBase.solve(prob::BVProblem, alg::AbstractSimpleMIRK; dt = 0.0, kwargs...)
     dt ≤ 0 && throw(ArgumentError("dt must be positive"))
     N = Int(cld(prob.tspan[2] - prob.tspan[1], dt))

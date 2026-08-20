@@ -9,9 +9,6 @@ const GROUP = current_group()
 
 run_tests(;
     core = () -> begin
-        @testset "Code quality (Aqua.jl)" begin
-            include(joinpath(@__DIR__, "aqua_tests.jl"))
-        end
         @testset "Test MIRK methods convergence" begin
             include(joinpath(@__DIR__, "mirk_tests.jl"))
         end
@@ -24,6 +21,9 @@ run_tests(;
     end,
     qa = () -> begin
         activate_group_env(joinpath(@__DIR__, "qa"))
+        @testset "Code quality (Aqua.jl)" begin
+            include(joinpath(@__DIR__, "aqua_tests.jl"))
+        end
         include(joinpath(@__DIR__, "qa", "qa.jl"))
     end,
     groups = Dict(

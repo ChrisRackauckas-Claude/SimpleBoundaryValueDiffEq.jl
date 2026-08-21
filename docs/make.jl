@@ -21,5 +21,4 @@ makedocs(;
         "Developer API" => "developer_api.md",
     ],
     checkdocs = :exports,
-    warnonly = false,
 )

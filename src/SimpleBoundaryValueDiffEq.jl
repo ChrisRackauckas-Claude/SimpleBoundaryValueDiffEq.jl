@@ -2,17 +2,18 @@ module SimpleBoundaryValueDiffEq
 
 import CommonSolve: solve!
 import DiffEqBase
-import DiffEqBase: solve
 import FiniteDiff
 import SciMLBase
 using OrdinaryDiffEqTsit5: Tsit5
 using SciMLBase: AbstractBVPAlgorithm, BVProblem, NonlinearFunction, NonlinearProblem,
-    ODEProblem, ODESolution, StandardBVProblem, TwoPointBVProblem,
-    build_solution, init, isinplace
+    ODEProblem, ODESolution, ReturnCode, StandardBVProblem, TwoPointBVProblem,
+    build_solution, init, isinplace, remake, solve, successful_retcode
 using SimpleNonlinearSolve: SimpleNewtonRaphson
 
 export AbstractSimpleMIRK, SimpleMIRK4, SimpleMIRK5, SimpleMIRK6, SimpleShooting
 export alg_order, alg_stage, constructSimpleMIRK
+export BVProblem, ODESolution, ReturnCode, TwoPointBVProblem, remake, solve,
+    successful_retcode
 
 """
     AbstractSimpleMIRK <: AbstractBVPAlgorithm
